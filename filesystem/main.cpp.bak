@@ -1,0 +1,161 @@
+#include <Windows.h>
+#include <iostream>
+#include <fstream>
+#include <stdlib.h>
+#include <bitset>
+
+//#include "RWLock.h"
+#include "part.h"
+#include "FS.h"
+#include "FSBitvector.h"
+#include "File.h"
+
+using namespace std;
+
+RWLock lock;
+RWLock consoleLock;
+
+DWORD WINAPI thread1(LPVOID data) {
+
+	consoleLock.acquireWrite();
+	cout << "Thread 1 start" << endl;
+	consoleLock.releaseWrite();
+
+	lock.acquireRead();
+
+	consoleLock.acquireWrite();
+	cout << "Read lock acquired - Thread 1" << endl;
+	consoleLock.releaseWrite();
+
+	lock.acquireRead();
+
+	consoleLock.acquireWrite();
+	cout << "Read lock acquired again - Thread 1 - sleeping 1s" << endl;
+	consoleLock.releaseWrite();
+
+	Sleep(1000);
+
+	consoleLock.acquireWrite();
+	cout << "Releasing locks" << endl;
+	consoleLock.releaseWrite();
+
+	lock.releaseRead();
+	lock.releaseRead();
+
+	consoleLock.acquireWrite();
+	cout << "Read locks released - Thread 1" << endl;
+	consoleLock.releaseWrite();
+	
+	return 0;
+}
+
+DWORD WINAPI thread2(LPVOID data) {
+	consoleLock.acquireWrite();
+	cout << "Thread 2 start - sleeping 1s" << endl;
+	consoleLock.releaseWrite();
+
+	Sleep(1000);
+
+	consoleLock.acquireWrite();
+	cout << "Acquiring read lock - Thread 2" << endl;
+	consoleLock.releaseWrite();
+
+	lock.acquireRead();
+
+	consoleLock.acquireWrite();
+	cout << "Acquired read lock - Thread 2" << endl;
+	consoleLock.releaseWrite();
+
+	consoleLock.acquireWrite();
+	cout << "Upgrading to write lock - Thread 2" << endl;
+	consoleLock.releaseWrite();
+
+	if (lock.tryAcquireWrite(true)) {
+		consoleLock.acquireWrite();
+		cout << "Write lock acquired - Thread 2" << endl;
+		consoleLock.releaseWrite();
+	}
+	else {
+		consoleLock.acquireWrite();
+		cout << "FAILED ACQUIRING WRITE LOCK UPGRADE - Thread 2" << endl;
+		consoleLock.releaseWrite();
+	}
+
+	return 0;
+}
+
+
+int main(void) {
+    Partition p("part.ini");
+
+	char letter = FS::mount(&p);
+	
+	FS::format(letter);
+
+    File* file = FS::open("A:\\testfile.txt", 'w');
+
+	file->seek(512);
+
+	char buffer[ClusterSize * 4 + 1024] = { 0 };
+	memset(buffer + 512, 0xFF, ClusterSize);
+	memset(buffer + 512 + ClusterSize, 0xFE, ClusterSize);
+	memset(buffer + 512 + ClusterSize * 2, 0xFD, ClusterSize);
+	memset(buffer + 512 + ClusterSize * 3, 0xFC, ClusterSize);
+	memset(buffer + 512 + ClusterSize * 4, 0xFB, 512);
+	file->write(ClusterSize * 4 + 1024, buffer);
+
+	memset(buffer, 0, ClusterSize * 4 + 512);
+	file->seek(0);
+	file->read(5000, buffer);
+
+	delete file;
+
+	File* file2 = FS::open("A:\\testfile.txt", 'r');
+	File* file3 = FS::open("A:\\testfile.txt", 'r');
+	File* file4 = FS::open("A:\\testfile.txt", 'r');
+
+	Directory d;
+
+	FS::readRootDir('A', 0, d);
+
+	File* dispo_file = FS::open("A:\\dispos.bin", 'w');
+
+	delete dispo_file;
+
+	bool exists = FS::doesExist("A:\\dispos.bin");
+
+	FS::readRootDir('A', 0, d);
+
+	FS::deleteFile("A:\\dispos.bin");
+
+	FS::readRootDir('A', 0, d);
+
+	exists = FS::doesExist("A:\\dispos.bin");
+
+	/* ------------------*/
+	/* CONCURRENCY TESTS */
+	//DWORD threadID;
+
+	//HANDLE hThread1 = CreateThread(
+	//	NULL,
+	//	0,
+	//	thread1,
+	//	NULL,
+	//	0,
+	//	&threadID
+	//);
+
+	//HANDLE hThread2 = CreateThread(
+	//	NULL,
+	//	0,
+	//	thread2,
+	//	NULL,
+	//	0,
+	//	&threadID
+	//);
+
+	//WaitForSingleObject(hThread1, INFINITE);
+	//WaitForSingleObject(hThread2, INFINITE);
+
+	return 0;
+}

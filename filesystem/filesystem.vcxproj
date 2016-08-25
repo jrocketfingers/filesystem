@@ -74,7 +74,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>part.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -110,6 +115,52 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="File.h" />
+    <ClInclude Include="FileHandle.h" />
+    <ClInclude Include="FS.h" />
+    <ClInclude Include="FSBitvector.h" />
+    <ClInclude Include="FSDirectory.h" />
+    <ClInclude Include="FSIndex.h" />
+    <ClInclude Include="FSPartition.h" />
+    <ClInclude Include="KernelFile.h" />
+    <ClInclude Include="KernelFS.h" />
+    <ClInclude Include="KernelFSInterface.h" />
+    <ClInclude Include="OperationIterator.h" />
+    <ClInclude Include="part.h" />
+    <ClInclude Include="ReadableKernelFile.h" />
+    <ClInclude Include="ReliableFilesizeKernelFile.h" />
+    <ClInclude Include="RWLock.h" />
+    <ClInclude Include="testprimer.h" />
+    <ClInclude Include="utils.h" />
+    <ClInclude Include="WritableKernelFile.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="File.cpp" />
+    <ClCompile Include="FileHandle.cpp" />
+    <ClCompile Include="FS.cpp" />
+    <ClCompile Include="FSBitvector.cpp" />
+    <ClCompile Include="FSDirectory.cpp" />
+    <ClCompile Include="FSIndex.cpp" />
+    <ClCompile Include="FSPartition.cpp" />
+    <ClCompile Include="KernelFile.cpp" />
+    <ClCompile Include="KernelFS.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="nit1.cpp" />
+    <ClCompile Include="nit2.cpp" />
+    <ClCompile Include="nit3.cpp" />
+    <ClCompile Include="OperationIterator.cpp" />
+    <ClCompile Include="ReadableKernelFile.cpp" />
+    <ClCompile Include="ReliableFilesizeKernelFile.cpp" />
+    <ClCompile Include="RWLock.cpp" />
+    <ClCompile Include="utils.cpp" />
+    <ClCompile Include="WritableKernelFile.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="disk1.dat" />
+    <None Include="disk2.dat" />
+    <None Include="izlaz1.dat" />
+    <None Include="izlaz2.dat" />
+    <None Include="part.dat" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

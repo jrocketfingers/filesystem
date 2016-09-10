@@ -28,7 +28,6 @@ protected:
 	char data[ClusterSize] = { 0 };
 
 	BytesCnt filepos = 0;
-	BytesCnt size = 0;
 	ClusterNo n_clusters = 0;
 
 	FSPartition* partition = nullptr;

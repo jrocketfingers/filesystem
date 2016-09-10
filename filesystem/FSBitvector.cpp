@@ -90,10 +90,7 @@ ClusterNo FSBitvector::GetFirstFree() {
 
 	lock.acquireRead();
 	for (i = 0; i < size; i += 4) {
-		unsigned long data = ~(((unsigned long)(unsigned char)_bitvector[0 + i]) | 
-							  (((unsigned long)(unsigned char)_bitvector[1 + i]) << 8) |
-						      (((unsigned long)(unsigned char)_bitvector[2 + i]) << 16) |
-							  (((unsigned long)(unsigned char)_bitvector[3 + i]) << 24));
+		unsigned long data = ~(*((unsigned long*)(_bitvector + i)));
 
 		if (_BitScanForward(&index, data))
 			break;

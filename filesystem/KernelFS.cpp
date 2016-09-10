@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include "KernelFS.h"
 #include "FSDirectory.h"
 #include "WritableKernelFile.h"

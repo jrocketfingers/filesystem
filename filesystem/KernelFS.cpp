@@ -139,6 +139,11 @@ File* KernelFS::open(char* fpath, char mode) {
 	}
 
 	File* file = _createFileInstance(file_handle, mode);
+
+	if (mode == 'a') {
+		assert(file->seek(file->getFileSize()));
+	}
+
 	fsLock.releaseRead();
 
 	return file;

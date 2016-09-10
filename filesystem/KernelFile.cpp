@@ -91,7 +91,7 @@ char KernelFile::seek(BytesCnt loc)
 {
 	char ret;
 
-	if (loc >= file_handle->GetFilesize())
+	if (loc > file_handle->GetFilesize())
 		ret = 0;
 	else {
 		filepos = loc;

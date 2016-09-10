@@ -1,3 +1,5 @@
+#include <cassert>
+
 #include "FSDirectory.h"
 #include "FileHandle.h"
 
@@ -32,7 +34,8 @@ EntryNum FSDirectory::AddEntry(FileHandle * file_handle)
 	entry.indexCluster = file_handle->GetIndex()->GetIndexCluster();
 	entry.size = 0;
 
-	seek(20 * entry_num);
+	assert(seek(20 * entry_num));
+
 	write(20, (char*)&entry);
 
 	return filepos / 20 - 1;
@@ -40,7 +43,7 @@ EntryNum FSDirectory::AddEntry(FileHandle * file_handle)
 
 char FSDirectory::GetEntry(EntryNum entry_num, Entry * entry)
 {
-	seek(entry_num * 20);
+	assert(seek(entry_num * 20));
 
 	BytesCnt bytes_read = read(20, (char*)entry);
 
@@ -50,7 +53,7 @@ char FSDirectory::GetEntry(EntryNum entry_num, Entry * entry)
 char FSDirectory::UpdateEntry(EntryNum entry_num, const Entry * entry)
 {
 
-	seek(entry_num * 20);
+	assert(seek(entry_num * 20));
 
 	write(20, (char*)entry);
 
@@ -76,7 +79,7 @@ EntryNum FSDirectory::FindEntry(char * fpath, Entry* entry)
 	ParsedFilepath parsed;
 	parse_file_path(fpath, &parsed);
 
-	seek(0);
+	assert(seek(0));
 
 	Entry* temp_entry;
 

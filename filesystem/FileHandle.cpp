@@ -122,7 +122,8 @@ void FileHandle::incWriters()
 	lock.acquireWrite();
 
 	access_count_lock.acquireWrite();
-	//assert(n_writers == 0);
+	assert(n_readers == 0);
+	assert(n_writers == 0);
 	n_writers++;
 	access_count_lock.releaseWrite();
 }
@@ -130,7 +131,8 @@ void FileHandle::incWriters()
 void FileHandle::decWriters()
 {
 	access_count_lock.acquireWrite();
-	//assert(n_writers == 1);
+	assert(n_writers == 1);
+	assert(n_readers == 0);
 	n_writers--;
 	access_count_lock.releaseWrite();
 

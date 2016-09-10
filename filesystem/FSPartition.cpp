@@ -27,7 +27,7 @@ void FSPartition::Mount(KernelFSInterface* fs) {
 	bitvector = new FSBitvector(64, buffer);
 
 	FileHandle* file_handle = new FileHandle(fs);
-	FSIndex* index = new FSIndex(this, GetRootDirectoryIndexCluster());
+	FSIndex* index = new FSIndex(this, GetRootDirectoryIndexCluster(), false);
 	file_handle->SetIndex(index);
 	file_handle->SetPartition(this);
 

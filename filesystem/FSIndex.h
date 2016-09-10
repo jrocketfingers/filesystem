@@ -20,6 +20,7 @@ class FSIndex
 public:
 	FSIndex(FSPartition *partition);
 	FSIndex(FSPartition *partition, ClusterNo index_cluster);
+	FSIndex(FSPartition *partition, ClusterNo index_cluster, bool fresh);
 	~FSIndex();
 
 	ClusterNo GetPhysCluster(ClusterNo cluster_number);

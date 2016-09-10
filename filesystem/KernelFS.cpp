@@ -112,7 +112,7 @@ char KernelFS::doesExist(char* fpath, FileHandle** file_handle)
 		if (file_handle != nullptr) {
 			(*file_handle)->SetFilename(entry.name);
 			(*file_handle)->SetExtension(entry.ext);
-			FSIndex* index = new FSIndex(partition, entry.indexCluster);
+			FSIndex* index = new FSIndex(partition, entry.indexCluster, false);
 			(*file_handle)->SetIndex(index);
 			(*file_handle)->SetFilesize(entry.size);
 			(*file_handle)->SetPartition(partition);

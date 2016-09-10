@@ -8,24 +8,30 @@ FSIndex::FSIndex(FSPartition *partition)
 FSIndex::FSIndex(FSPartition *partition, ClusterNo index_cluster) : FSIndex(partition)
 {
 	this->index_cluster = index_cluster;
-	partition->ReadCluster(index_cluster, (char*)index);
+}
 
-	int i, j;
-	for (i = 0; i < SECOND_LEVEL_INDEX; i++) {
-		if (index[i] == 0)
-			break;
-	}
+FSIndex::FSIndex(FSPartition *partition, ClusterNo index_cluster, bool fresh) : FSIndex(partition, index_cluster)
+{
+	if (!fresh) {
+		partition->ReadCluster(index_cluster, (char*)index);
 
-	if (i == SECOND_LEVEL_INDEX) {
-		next.is_nested = true;
-
-		/* check for the 2nd level indexes */
-		for (i = SECOND_LEVEL_INDEX, j = 0; i < NUM_INDEX_ENTRIES; i++, j++) {
+		int i, j;
+		for (i = 0; i < SECOND_LEVEL_INDEX; i++) {
 			if (index[i] == 0)
 				break;
+		}
 
-			nested_index[j] = new NestedIndex();
-			partition->ReadCluster(index[i], (char*)(nested_index[j]->index));
+		if (i == SECOND_LEVEL_INDEX) {
+			next.is_nested = true;
+
+			/* check for the 2nd level indexes */
+			for (i = SECOND_LEVEL_INDEX, j = 0; i < NUM_INDEX_ENTRIES; i++, j++) {
+				if (index[i] == 0)
+					break;
+
+				nested_index[j] = new NestedIndex();
+				partition->ReadCluster(index[i], (char*)(nested_index[j]->index));
+			}
 		}
 	}
 }
@@ -90,6 +96,9 @@ ClusterNo FSIndex::Allocate()
 			/* mark it as nested, to be handled with the nested check */
 			next.is_nested = true;
 			next.nested_index = 0;
+
+			nested_index[next.index - 256] = new NestedIndex();
+			nested_index[next.index - 256]->cluster = partition->Allocate();
 		}
 	 }
 
@@ -98,15 +107,15 @@ ClusterNo FSIndex::Allocate()
 		if (next.nested_index == NUM_INDEX_ENTRIES) {
 			next.nested_index = 0;
 
-			nested_index[next.index] = new NestedIndex();
-			nested_index[next.index]->cluster = partition->Allocate();
+			nested_index[next.index - 256] = new NestedIndex();
+			nested_index[next.index - 256]->cluster = partition->Allocate();
 
 			next.index++;
 		}
 
 		/* otherwise just fill the current one */
-		nested_index[next.index]->index[next.nested_index++] = phys_cluster;
-		partition->WriteCluster(nested_index[next.index]->cluster, (char*)(nested_index[next.index]->index));
+		nested_index[next.index - 256]->index[next.nested_index++] = phys_cluster;
+		partition->WriteCluster(nested_index[next.index - 256]->cluster, (char*)(nested_index[next.index - 256]->index));
 	}
 
 	return get_logical_cluster(&next) - 1; // return the previous logical cluster

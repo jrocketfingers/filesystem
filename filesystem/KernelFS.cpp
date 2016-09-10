@@ -165,13 +165,12 @@ char KernelFS::deleteFile(char * fname)
 
 	FSPartition *partition = partitions[parsed.partition - 'A'];
 
-	FSDirectory directory(partition->GetRootDirectoryFileHandle());
-
 	FileHandle* file_handle = new FileHandle(this, fname);
 	doesExist(fname, &file_handle);
 
 	file_handle->GetIndex()->DeallocateAll();
 
+	FSDirectory directory(partition->GetRootDirectoryFileHandle());
 	directory.DeleteEntry(file_handle->GetDirectoryEntry());
 
 	delete file_handle;

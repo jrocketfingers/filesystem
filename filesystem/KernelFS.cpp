@@ -23,7 +23,7 @@ char KernelFS::mount(Partition *partition) {
 	}
 
 	if (i < 26) {
-		partitions[i] = new FSPartition(partition);
+		partitions[i] = new FSPartition(partition, i + 'A');
 		partitions[i]->Mount(this);
 
 		i = i + 'A';

@@ -13,7 +13,7 @@ using namespace std;
 // Implements filesystem related operations over a wrapped partition
 class FSPartition {
 public:
-	FSPartition(Partition *p);
+	FSPartition(Partition *p, char letter);
 
 	void Mount(KernelFSInterface* fs);
 	char Format();
@@ -40,6 +40,8 @@ private:
 	map<string, FileHandle> open_files;
 
 	FileHandle* root_dir;
+
+	char letter;
 
 	RWLock allocation_lock;
 };

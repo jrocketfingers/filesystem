@@ -1,7 +1,8 @@
 #include "FSPartition.h"
 
-FSPartition::FSPartition(Partition * p) {
+FSPartition::FSPartition(Partition * p, char letter) {
 	this->p = p;
+	this->letter = letter;
 }
 
 FSPartition::~FSPartition() {

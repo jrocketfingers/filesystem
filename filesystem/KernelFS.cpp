@@ -167,12 +167,12 @@ char KernelFS::deleteFile(char * fname)
 
 	string string_fname(fname);
 
-	file_table.erase(string_fname);
-
 	FSPartition *partition = partitions[parsed.partition - 'A'];
 
 	FileHandle* file_handle = new FileHandle(this, fname);
 	doesExist(fname, &file_handle);
+
+	file_table.erase(string_fname);
 
 	file_handle->GetIndex()->DeallocateAll();
 

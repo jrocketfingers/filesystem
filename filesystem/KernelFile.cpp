@@ -18,6 +18,9 @@ KernelFile::~KernelFile()
 }
 
 char KernelFile::write(BytesCnt len, const char* data_buffer) {
+	if (len / ClusterSize > partition->GetNumOfFreeclusters())
+		return 0;
+
 	OperationIterator it(this, len);
 
 	while (!it.EOP()) {

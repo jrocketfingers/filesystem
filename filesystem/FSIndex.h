@@ -33,7 +33,7 @@ private:
 
 	FSPartition *partition;
 	ClusterNo index_cluster;
-	ClusterNo index[256] = { 0 };
+	ClusterNo index[512] = { 0 };
 	NestedIndex* nested_index[256] = { nullptr };
 	IndexCursor next;
 

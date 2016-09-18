@@ -15,22 +15,22 @@ FSIndex::FSIndex(FSPartition *partition, ClusterNo index_cluster, bool fresh) : 
 	if (!fresh) {
 		partition->ReadCluster(index_cluster, (char*)index);
 
-		int i, j;
-		for (i = 0; i < SECOND_LEVEL_INDEX; i++) {
-			if (index[i] == 0)
+		for (next.index = 0; next.index < SECOND_LEVEL_INDEX; next.index++) {
+			if (index[next.index] == 0)
 				break;
 		}
 
-		if (i == SECOND_LEVEL_INDEX) {
+		if (next.index == SECOND_LEVEL_INDEX) {
 			next.is_nested = true;
 
 			/* check for the 2nd level indexes */
-			for (i = SECOND_LEVEL_INDEX, j = 0; i < NUM_INDEX_ENTRIES; i++, j++) {
-				if (index[i] == 0)
+			for (next.index = SECOND_LEVEL_INDEX, next.nested_index = 0; next.index < NUM_INDEX_ENTRIES; next.index++, next.nested_index++) {
+				nested_index[next.nested_index] = new NestedIndex();
+
+				if (index[next.index] == 0)
 					break;
 
-				nested_index[j] = new NestedIndex();
-				partition->ReadCluster(index[i], (char*)(nested_index[j]->index));
+				partition->ReadCluster(index[next.index], (char*)(nested_index[next.nested_index]->index));
 			}
 		}
 	}

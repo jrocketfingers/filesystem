@@ -11,7 +11,11 @@ KernelFS::KernelFS() {
 }
 
 KernelFS::~KernelFS() {
-
+	for (int i = 0; i < 26; i++) {
+		if (partitions[i] != nullptr) {
+			delete partitions[i];
+		}
+	}
 }
 
 char KernelFS::mount(Partition *partition) {

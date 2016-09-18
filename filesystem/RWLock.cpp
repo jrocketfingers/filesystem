@@ -32,8 +32,12 @@ void RWLock::releaseRead() {
 }
 
 void RWLock::acquireWrite() {
+	acquireWrite(false);
+}
+
+void RWLock::acquireWrite(bool upgrade) {
 	EnterCriticalSection(&global_crit_section);
-	_waitForReaders(0);
+	_waitForReaders(upgrade ? 1 : 0);
 
 	writer_thread = GetCurrentThreadId();
 }

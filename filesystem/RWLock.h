@@ -12,6 +12,7 @@ public:
 	void releaseRead();
 
 	void acquireWrite();
+	void acquireWrite(bool upgrade);
 	bool tryAcquireWrite(bool upgrade);
 	void releaseWrite();
 private:

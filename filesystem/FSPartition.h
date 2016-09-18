@@ -10,6 +10,17 @@
 
 using namespace std;
 
+const ClusterNo kCacheClusters = 100;
+
+typedef struct {
+	unsigned char dirty[kCacheClusters] = { 0 };
+	unsigned char valid[kCacheClusters] = { 0 };
+	ClusterNo tag[kCacheClusters];
+	char data[kCacheClusters][2048];
+
+	ClusterNo next_slot = 0;
+} Cache;
+
 // Implements filesystem related operations over a wrapped partition
 class FSPartition {
 public:
@@ -22,18 +33,22 @@ public:
 	void Deallocate(ClusterNo n);
 	ClusterNo GetRootDirectoryIndexCluster();
 	FileHandle* GetRootDirectoryFileHandle();
+	void CommitCache(ClusterNo n);
+
+	ClusterNo GetNumOfFreeclusters() const;
 
 	/* Wrappers */
 	ClusterNo GetNumOfClusters() const;
 	int ReadCluster(ClusterNo n, char *buffer);
 	int WriteCluster(ClusterNo n, const char *buffer);
-	int WriteCluster(ClusterNo n, const char *buffer, size_t size, size_t offset);
 
 	~FSPartition();
 	/* End wrappers */
 private:
 	Partition *p;
 	ClusterNo n_bitvector_clusters;
+	ClusterNo n_allocated_clusters = 0;
+
 	FSBitvector *bitvector = nullptr;
 	bool _is_mounted = false;
 
@@ -42,6 +57,9 @@ private:
 	FileHandle* root_dir;
 
 	char letter;
+
+	Cache cache;
+	RWLock cache_lock;
 
 	RWLock allocation_lock;
 };

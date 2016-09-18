@@ -1,4 +1,7 @@
+#include <cassert>
 #include "FSPartition.h"
+
+#define CACHE_ENABLED
 
 FSPartition::FSPartition(Partition * p, char letter) {
 	this->p = p;
@@ -7,6 +10,13 @@ FSPartition::FSPartition(Partition * p, char letter) {
 
 FSPartition::~FSPartition() {
 	delete bitvector;
+
+	cache_lock.acquireWrite();
+	for (ClusterNo i = 0; i < kCacheClusters; i++) {
+		if (cache.dirty[i] && cache.valid[i])
+			this->p->writeCluster(cache.tag[i], cache.data[i]);
+	}
+	cache_lock.releaseWrite();
 }
 
 ClusterNo FSPartition::GetRootDirectoryIndexCluster()
@@ -73,7 +83,8 @@ ClusterNo FSPartition::Allocate()
 
 	allocation_lock.acquireWrite();
 	ClusterNo cluster = bitvector->Allocate(&update);
-	p->writeCluster(update.changed_cluster, update.changed_cluster_data);
+	this->WriteCluster(update.changed_cluster, update.changed_cluster_data);
+	n_allocated_clusters++;
 	allocation_lock.releaseWrite();
 
 	return cluster;
@@ -85,7 +96,8 @@ ClusterNo FSPartition::Allocate(ClusterNo cluster)
 
 	allocation_lock.acquireWrite();
 	ClusterNo allocated_cluster = bitvector->Allocate(cluster, &update);
-	p->writeCluster(update.changed_cluster, update.changed_cluster_data);
+	this->WriteCluster(update.changed_cluster, update.changed_cluster_data);
+	n_allocated_clusters++;
 	allocation_lock.releaseWrite();
 
 	return allocated_cluster;
@@ -96,7 +108,8 @@ void FSPartition::Deallocate(ClusterNo n) {
 
 	allocation_lock.acquireWrite();
 	bitvector->Deallocate(n, &update);
-	p->writeCluster(update.changed_cluster, update.changed_cluster_data);
+	this->WriteCluster(update.changed_cluster, update.changed_cluster_data);
+	n_allocated_clusters--;
 	allocation_lock.releaseWrite();
 }
 
@@ -104,19 +117,64 @@ ClusterNo FSPartition::GetNumOfClusters() const {
 	return this->p->getNumOfClusters();
 }
 
+void FSPartition::CommitCache(ClusterNo n) {
+	ClusterNo cache_entry = n % kCacheClusters;
+
+	if (n != cache.tag[cache_entry]) {
+		if (cache.valid[cache_entry] && cache.dirty[cache_entry])
+			this->p->writeCluster(cache.tag[cache_entry], cache.data[cache_entry]);
+
+		cache.valid[cache_entry] = 1;
+		cache.dirty[cache_entry] = 0;
+		this->p->readCluster(n, cache.data[cache_entry]);
+		cache.tag[cache_entry] = n;
+	}
+}
+
+ClusterNo FSPartition::GetNumOfFreeclusters() const
+{
+	return GetNumOfClusters() - n_allocated_clusters;
+}
+
 int FSPartition::ReadCluster(ClusterNo n, char * buffer) {
-	return this->p->readCluster(n, buffer);
+#ifdef CACHE_ENABLED
+	ClusterNo cache_entry = n % kCacheClusters;
+
+	while (true) {
+		cache_lock.acquireRead();
+		if (cache_lock.tryAcquireWrite(true)) {
+			CommitCache(n);
+			cache_lock.releaseWrite();
+
+			memcpy(buffer, cache.data[cache_entry], ClusterSize);
+			cache_lock.releaseRead();
+
+			return 1;
+		}
+		cache_lock.releaseRead();
+		Sleep(0);
+	}
+#else
+	this->p->readCluster(n, buffer);
+#endif
+
+	return 1;
 }
 
 int FSPartition::WriteCluster(ClusterNo n, const char * buffer)
 {
-	return this->p->writeCluster(n, buffer);
-}
+#ifdef CACHE_ENABLED
+	ClusterNo cache_entry = n % kCacheClusters;
 
-int FSPartition::WriteCluster(ClusterNo n, const char * buffer, size_t size, size_t offset) {
-	char prep_buffer[ClusterSize] = { 0 };
+	cache_lock.acquireWrite();
+	CommitCache(n);
 
-	memcpy(prep_buffer + offset, buffer, size);
+	memcpy(cache.data[cache_entry], buffer, ClusterSize);
+	cache.dirty[cache_entry] = 1;
+	cache_lock.releaseWrite();
+#else
+	this->p->writeCluster(n, buffer);
+#endif
 
-	return FSPartition::WriteCluster(n, prep_buffer);
+	return 1;
 }

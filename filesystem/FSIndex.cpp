@@ -98,7 +98,10 @@ ClusterNo FSIndex::Allocate()
 			next.nested_index = 0;
 
 			nested_index[next.index - 256] = new NestedIndex();
-			nested_index[next.index - 256]->cluster = partition->Allocate();
+			ClusterNo new_index_cluster = partition->Allocate();
+			nested_index[next.index - 256]->cluster = new_index_cluster;
+			index[next.index] = new_index_cluster;
+			partition->WriteCluster(index_cluster, (char*)index);
 		}
 	 }
 
@@ -107,10 +110,13 @@ ClusterNo FSIndex::Allocate()
 		if (next.nested_index == NUM_INDEX_ENTRIES) {
 			next.nested_index = 0;
 
-			nested_index[next.index - 256] = new NestedIndex();
-			nested_index[next.index - 256]->cluster = partition->Allocate();
-
 			next.index++;
+
+			nested_index[next.index - 256] = new NestedIndex();
+			ClusterNo new_index_cluster = partition->Allocate();
+			nested_index[next.index - 256]->cluster = new_index_cluster;
+			index[next.index] = new_index_cluster;
+			partition->WriteCluster(index_cluster, (char*)index);
 		}
 
 		/* otherwise just fill the current one */

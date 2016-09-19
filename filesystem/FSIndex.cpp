@@ -134,9 +134,12 @@ ClusterNo FSIndex::GetIndexCluster()
 
 ClusterNo FSIndex::get_logical_cluster(IndexCursor* cursor)
 {
-	ClusterNo cluster = cursor->index;
+	ClusterNo cluster;
+
 	if (cursor->is_nested)
-		cluster += cursor->nested_index;
+		cluster = 256 + (cursor->index - 256) * 512 + cursor->nested_index;
+	else
+		cluster = cursor->index;
 
 	return cluster;
 }

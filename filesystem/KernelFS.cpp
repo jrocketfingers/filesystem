@@ -224,7 +224,7 @@ FileHandle* KernelFS::_createPhysicalFile(char* fpath) {
 File * KernelFS::_createFileInstance(FileHandle * file_handle, char mode)
 {
 	KernelFile* kernel_file = nullptr;
-	if (mode == 'w') {
+	if (mode == 'w' || mode == 'a') {
 		kernel_file = new WritableKernelFile(file_handle);
 	}
 	else {

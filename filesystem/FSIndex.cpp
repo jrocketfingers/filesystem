@@ -67,21 +67,31 @@ ClusterNo FSIndex::GetPhysCluster(ClusterNo cluster_number)
 
 void FSIndex::DeallocateAll()
 {
-	ClusterNo phys_cluster;
-	int file_cluster = 0;
-	while ((phys_cluster = GetPhysCluster(file_cluster)) != 0) {
-		partition->Deallocate(phys_cluster);
-		file_cluster++;
+	for (int i = 0; i < NUM_INDEX_ENTRIES; i++) {
+		if (index[i] == 0)
+			break;
+
+		if (i >= SECOND_LEVEL_INDEX) {
+			for (int j = 0; j < NUM_INDEX_ENTRIES; j++) {
+				ClusterNo phys = nested_index[i - SECOND_LEVEL_INDEX]->index[j];
+				if (phys == 0)
+					break;
+
+				partition->Deallocate(phys);
+			}
+
+			delete nested_index[i - SECOND_LEVEL_INDEX];
+			nested_index[i - SECOND_LEVEL_INDEX] = nullptr;
+		}
+
+		partition->Deallocate(index[i]);
 	}
 
-	partition->Deallocate(this->index_cluster);
+	memset(index, 0, sizeof(index[0]) * 512);
 
-	for (int i = 0; i < SECOND_LEVEL_INDEX; i++) {
-		if (nested_index[i] != nullptr)
-			delete nested_index[i];
-	}
-
-	memset(index, 0, sizeof(index[0]) * 256);
+	next.index = 0;
+	next.is_nested = false;
+	next.nested_index = 0;
 }
 
 ClusterNo FSIndex::Allocate()

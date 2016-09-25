@@ -149,6 +149,9 @@ File* KernelFS::open(char* fpath, char mode) {
 	if (mode == 'a') {
 		assert(file->seek(file->getFileSize()));
 	}
+	else if (mode == 'w') {
+		file->truncate();
+	}
 
 	fsLock.releaseRead();
 
